@@ -1,0 +1,19 @@
+[project]
+name = "ticketflow"
+version = "1.0.0"
+description = "TicketFlow - Event Ticketing System API"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi[standard]>=0.115",
+    "sqlalchemy>=2.0",
+    "psycopg[binary]>=3.2",
+    "alembic>=1.13",
+    "pydantic-settings>=2.4",
+    "pyjwt>=2.9",
+    "pwdlib[argon2]>=0.2",
+    "email-validator>=2.2",
+    "python-multipart>=0.0.9",
+]
+
+[dependency-groups]
+dev = ["pytest>=8", "httpx>=0.27", "ruff>=0.6"]
