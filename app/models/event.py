@@ -30,10 +30,10 @@ class TicketType(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     event_id: Mapped[int] = mapped_column(ForeignKey("events.id", ondelete="CASCADE"), index=True)
-    name: Mapped[str] = mapped_column(String(80))  # VIP, Regular, Student...
+    name: Mapped[str] = mapped_column(String(80))  
     price: Mapped[Decimal] = mapped_column(Numeric(10, 2))
     quantity: Mapped[int]
-    sold: Mapped[int] = mapped_column(default=0)  # includes tickets currently held in pending orders
+    sold: Mapped[int] = mapped_column(default=0)  
 
 
 class Seat(Base):
@@ -43,5 +43,5 @@ class Seat(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     event_id: Mapped[int] = mapped_column(ForeignKey("events.id", ondelete="CASCADE"), index=True)
     ticket_type_id: Mapped[int] = mapped_column(ForeignKey("ticket_types.id", ondelete="CASCADE"))
-    label: Mapped[str] = mapped_column(String(20))  # e.g. "A-12"
+    label: Mapped[str] = mapped_column(String(20))  
     status: Mapped[SeatStatus] = mapped_column(Enum(SeatStatus), default=SeatStatus.available)

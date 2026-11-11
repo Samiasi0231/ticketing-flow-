@@ -1,8 +1,9 @@
+
 from collections.abc import Iterator
 from typing import Annotated
 
 from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
 
 from app.core.database import SessionLocal
@@ -10,7 +11,7 @@ from app.core.security import decode_access_token
 from app.models.enums import UserRole
 from app.models.user import User
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
+bearer_scheme = HTTPBearer()
 
 
 def get_db() -> Iterator[Session]:
@@ -21,13 +22,25 @@ def get_db() -> Iterator[Session]:
 DB = Annotated[Session, Depends(get_db)]
 
 
-def get_current_user(db: DB, token: Annotated[str, Depends(oauth2_scheme)]) -> User:
-    user_id = decode_access_token(token)
+def get_current_user(
+    db: DB,
+    credentials: Annotated[HTTPAuthorizationCredentials, Depends(bearer_scheme)],
+) -> User:
+    user_id = decode_access_token(credentials.credentials)
     user = db.get(User, user_id) if user_id else None
+
     if not user:
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid or expired token")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired token",
+        )
+
     if not user.is_active:
-        raise HTTPException(status.HTTP_403_FORBIDDEN, "Account is suspended")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Account is suspended",
+        )
+
     return user
 
 
@@ -37,11 +50,18 @@ CurrentUser = Annotated[User, Depends(get_current_user)]
 def require_roles(*roles: UserRole):
     def checker(user: CurrentUser) -> User:
         if user.role not in roles:
-            raise HTTPException(status.HTTP_403_FORBIDDEN, "Not enough permissions")
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not enough permissions",
+            )
         return user
 
     return checker
 
 
-Organizer = Annotated[User, Depends(require_roles(UserRole.organizer, UserRole.admin))]
+Organizer = Annotated[
+    User,
+    Depends(require_roles(UserRole.organizer, UserRole.admin)),
+]
+
 Admin = Annotated[User, Depends(require_roles(UserRole.admin))]
